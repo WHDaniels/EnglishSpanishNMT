@@ -1,6 +1,7 @@
 import os
 import random
 import re
+from collections import Counter, OrderedDict
 
 import numpy as np
 from keras import callbacks
@@ -10,7 +11,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from keras.models import Model
 from keras.layers import GRU, Input, Dense, TimeDistributed, Activation, RepeatVector, Bidirectional
 from keras.layers.embeddings import Embedding
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 from keras.losses import sparse_categorical_crossentropy
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.saving.save import save_model
@@ -19,15 +20,21 @@ from tensorflow.python.keras.saving.save import save_model
 def combineData():
     with open("europarl-en.txt", 'r', encoding='utf-8') as en, \
             open("europarl-es.txt", 'r', encoding='utf-8') as es, \
-            open("europarl.txt", 'w', encoding='utf-8') as target:
-        enRead, esRead = en.readlines(), es.readlines()
+            open('phrases.txt', 'r', encoding='utf-8') as phr, \
+            open("combined.txt", 'w', encoding='utf-8') as target:
+        enRead, esRead, phrRead = en.readlines(), es.readlines(), phr.readlines()
 
-        # take first 375,000 lines
-        for i in range(375000):
-            newLine = enRead[i].rstrip("\n") + "\t" + esRead[i]
-            # if the new line is less than 1024 characters long, contains and starts with a letter
-            if len(newLine) < 1024 and re.search('[a-zA-Z]', newLine) and re.search('[a-zA-Z]', newLine[0]):
-                target.write(enRead[i].rstrip("\n") + "\t" + esRead[i])
+        for i in phrRead:
+            target.write(i)
+
+        # first 375000 lines (as opposed to len(enRead) lines)
+        for j in range(375000):
+            newLine = enRead[j].rstrip("\n") + "\t" + esRead[j]
+            # if the new line is less than 1024 characters long,
+            # contains\starts with a letter, and doesn't contain numbers
+            if len(newLine) < 1024 and re.search('[a-zA-Z]', newLine) and re.search('[a-zA-Z]', newLine[0]) and \
+                    not re.search('[0-9]', newLine):
+                target.write(enRead[j].rstrip("\n") + "\t" + esRead[j])
 
 
 def loadData():
@@ -38,8 +45,10 @@ def loadData():
     with open("combined.txt", "r", encoding='utf-8') as file:
         content = file.readlines()
 
+        print("Shuffling data")
         # shuffle the data before adding to list
         random.shuffle(content)
+        print("Done Shuffling")
 
         for i in range(0, len(content)):
             line = content[i].split("\t")
@@ -49,24 +58,63 @@ def loadData():
     return enPhrases, esPhrases
 
 
+def firstWordOfFreqN(n, phraseList):
+    tk = Tokenizer(char_level=False, filters='¡¿!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\'\t\n')
+    tk.fit_on_texts(phraseList)
+
+    newDict = OrderedDict({k: v for k, v in sorted(tk.word_counts.items(), key=lambda item: item[1])})
+
+    print("word_count: {}".format(len(tk.word_counts.items())))
+
+    wordDifference = 0
+    for i in reversed(newDict):
+        wordDifference += 1
+        if newDict[i] <= n:
+            return wordDifference
+
+
 def preprocess():
     # get lists of both english and spanish phrases
     enPhrases, esPhrases = loadData()
 
+    # word frequency cutoff
+    n = 10
+
+    englishNumWords = firstWordOfFreqN(n, enPhrases)
+    spanishNumWords = firstWordOfFreqN(n, esPhrases)
+
+    print("Actual english vocab: " + str(englishNumWords))
+    print("Actual spanish vocab: " + str(spanishNumWords))
+
     # tokenizer setup
-    tkEn = Tokenizer(char_level=False, filters='¡¿!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
-    tkEs = Tokenizer(char_level=False, filters='¡¿!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
+    tkEn = Tokenizer(num_words=englishNumWords + 2, oov_token="<UNK>", char_level=False,
+                     filters='¡¿!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\'\t\n')
+    tkEs = Tokenizer(num_words=spanishNumWords + 2, oov_token="<UNK>", char_level=False,
+                     filters='¡¿!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\'\t\n')
 
     # create index based on word frequency
     tkEn.fit_on_texts(enPhrases)
     tkEs.fit_on_texts(esPhrases)
 
+    print("word_count_en: {}".format(len(tkEn.word_counts.items())))
+    print("word_count_es: {}".format(len(tkEs.word_counts.items())))
+
+    print("tkEn.word_index: {}".format(len(tkEn.word_index)))
+    print("tkEs.word_index: {}".format(len(tkEs.word_index)))
+
     # transform index contents to integers
     seqEn = tkEn.texts_to_sequences(enPhrases)
     seqEs = tkEs.texts_to_sequences(esPhrases)
 
-    # post-pad spanish sequence to the length of the largest phrase in that list
+    # print(seqEn)
+    # print(seqEs)
+
+    # post-pad english/spanish sequence to the length of the largest phrase in that list
+    padEn = padding(seqEn)
     padEs = padding(seqEs)
+
+    # print("padEn.shape: {}".format(padEn.shape))
+    # print("padEs.shape: {}".format(padEs.shape))
 
     # reshape the second index to be 3-dimensional (for sparse_categorical_crossentropy)
     padEs = padEs.reshape(*padEs.shape, 1)
@@ -80,7 +128,8 @@ def preprocess():
     newEn = padding(seqEn)
     # newEn = newEn.reshape((-1, padEs.shape[-2]))
 
-    return seqEn, padEs, tkEn, tkEs, newEn
+    print("Preprocessing finished\n")
+    return padEn, padEs, tkEn, tkEs, newEn
 
 
 def padding(sequence, maxLength=None):
@@ -104,12 +153,15 @@ def sequenceToText(sequence, tk):
 
 
 if __name__ == '__main__':
-    # combineData()
+    combineData()
+    # combined = open('combined.txt', 'r', encoding='utf-8')
 
     preEn, padEs, tkEn, tkEs, enInput = preprocess()
 
-    learningRate = 5e-3
-    # rms = optimizers.RMSprop(lr=0.001)
+    print("English Vocab: {}".format(len(tkEn.word_index)))
+    print("\nSpanish Vocab: {}".format(len(tkEs.word_index)))
+
+    learningRate = 0.001
     model = Sequential()
 
     # model.add(Embedding(len(tkEs.word_index), 64, input_length=enInput.shape[1]))
@@ -136,7 +188,7 @@ if __name__ == '__main__':
         save_best_only=True)
 
     # trains model
-    model.fit(enInput, padEs, batch_size=32, epochs=15, validation_split=0.2, callbacks=[model_checkpoint_callback])
+    model.fit(enInput, padEs, batch_size=32, epochs=50, validation_split=0.2, callbacks=[model_checkpoint_callback])
 
     # saves model after training
     # savePath = 'C:\\Users\\mercm\\OneDrive\\Documents\\GitHub\\EnglishSpanishNMT\\model'
