@@ -18,16 +18,26 @@ from tensorflow.python.keras.saving.save import save_model
 
 
 def combineData():
-    with open("europarl-en.txt", 'r', encoding='utf-8') as en, \
-            open("europarl-es.txt", 'r', encoding='utf-8') as es, \
+    """
+    with open('TatoebaEN.txt', 'r', encoding='utf-8') as fileEN, \
+            open('TatoebaES.txt', 'r', encoding='utf-8') as fileES, \
+            open('Tatoeba.txt', 'w', encoding='utf-8') as file:
+        EN, ES = fileEN.readlines(), fileES.readlines()
+        for i in range(len(EN)):
+            file.write(EN[i].rstrip("\n") + "\t" + ES[i])
+    """
+
+    with open("TatoebaEN.txt", 'r', encoding='utf-8') as en, \
+            open("TatoebaES.txt", 'r', encoding='utf-8') as es, \
             open('phrases.txt', 'r', encoding='utf-8') as phr, \
-            open("combined.txt", 'w', encoding='utf-8') as target:
+            open("combined2.txt", 'w', encoding='utf-8') as target:
         enRead, esRead, phrRead = en.readlines(), es.readlines(), phr.readlines()
 
         for i in phrRead:
             target.write(i)
 
-        # first 375000 lines (as opposed to len(enRead) lines)
+        # first n lines (as opposed to len(enRead) lines)
+        n = 375000
         for j in range(375000):
             newLine = enRead[j].rstrip("\n") + "\t" + esRead[j]
             # if the new line is less than 1024 characters long,
@@ -41,8 +51,9 @@ def loadData():
     enPhrases = []
     esPhrases = []
 
-    # read phrases.txt and add each phrase to its respective list
-    with open("combined.txt", "r", encoding='utf-8') as file:
+    # read phrase file and add each phrase to its respective list
+    translationFile = "combined2.txt"
+    with open(translationFile, "r", encoding='utf-8') as file:
         content = file.readlines()
 
         print("Shuffling data")
@@ -78,7 +89,7 @@ def preprocess():
     enPhrases, esPhrases = loadData()
 
     # word frequency cutoff
-    n = 10
+    n = 15
 
     englishNumWords = firstWordOfFreqN(n, enPhrases)
     spanishNumWords = firstWordOfFreqN(n, esPhrases)
@@ -153,7 +164,7 @@ def sequenceToText(sequence, tk):
 
 
 if __name__ == '__main__':
-    combineData()
+    # combineData()
     # combined = open('combined.txt', 'r', encoding='utf-8')
 
     preEn, padEs, tkEn, tkEs, enInput = preprocess()
@@ -180,7 +191,7 @@ if __name__ == '__main__':
                   metrics=['accuracy'])
 
     # callback to save best model
-    checkpointPath = (os.getcwd() + '\\europarl_model')
+    checkpointPath = (os.getcwd() + '\\combined2model')
     model_checkpoint_callback = callbacks.ModelCheckpoint(
         filepath=checkpointPath,
         monitor='val_accuracy',
