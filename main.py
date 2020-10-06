@@ -3,42 +3,71 @@ from keras_preprocessing.sequence import pad_sequences
 from tensorflow import keras
 import train
 import os
+from gui import Ui_MainWindow
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow, QApplication
 
-model = keras.models.load_model(os.getcwd() + '\\europarl_model')
-
-
+model = keras.models.load_model(os.getcwd() + '\\combined2model')
 preEn, preEs, tkEn, tkEs, enInput = train.preprocess()
 
-# mirrors the key to value relationship in tkEn.word_index
-y_id_to_word = {value: key for key, value in tkEs.word_index.items()}
-y_id_to_word[0] = '<PAD>'
 
-print("Input: ")
-sentence = input()
-original = sentence
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
-# sentence equals the list of ids that correspond to each word in sentence
-sentence = [tkEn.word_index[word] for word in sentence.split()]
-print(sentence)
-# post pad the sentence to the length of the n dimension
-sentence = pad_sequences([sentence], maxlen=preEn.shape[-1], padding='post')
-print("preEn shape: {}".format(preEn.shape))
-print("preEn shape[-1]: {}".format(preEn.shape[-1]))
+        # start local modifications to gui
+        self.ui.translateButton.clicked.connect(self.translatePressed)
 
-print("Sentence: {}".format(sentence))
-print("Sentence shape: {}".format(sentence.shape))
+    def translatePressed(self):
+        inputText = self.ui.englishBox.toPlainText()
+        print(inputText)
 
-sentences = np.array([sentence[0], preEn[0]])
-print(sentence)
+        # model = keras.models.load_model(os.getcwd() + '\\combined2model')
+        # preEn, preEs, tkEn, tkEs, enInput = train.preprocess()
 
-predictions = model.predict(sentences, len(sentences))
+        # mirrors the key to value relationship in tkEn.word_index
+        y_id_to_word = {value: key for key, value in tkEs.word_index.items()}
+        y_id_to_word[0] = '<PAD>'
 
-print('Sample 1:')
-print(original)
-print(' '.join([y_id_to_word[np.argmax(x)] for x in predictions[0]]))
+        sentence = inputText
+        original = sentence
 
-print("\nPredictions: {}".format(predictions[0]))
+        # sentence equals the list of ids that correspond to each word in sentence
+        sentence = [tkEn.word_index[word] for word in sentence.split()]
+        print(sentence)
 
-print('Sample 2:')
-print(' '.join([y_id_to_word[np.argmax(x)] for x in predictions[1]]))
-print(' '.join([y_id_to_word[np.max(x)] for x in preEs[0]]))
+        # post pad the sentence to the length of the n dimension
+        sentence = pad_sequences([sentence], maxlen=preEn.shape[-1], padding='post')
+        # print("preEn shape: {}".format(preEn.shape))
+        # print("preEn shape[-1]: {}".format(preEn.shape[-1]))
+
+        print("Sentence: {}".format(sentence))
+        print("Sentence shape: {}".format(sentence.shape))
+
+        sentences = np.array([sentence[0], preEn[0]])
+        print(sentence)
+
+        predictions = model.predict(sentences, len(sentences))
+
+        print('Sample 1:')
+        print(original)
+        print(' '.join([y_id_to_word[np.argmax(x)] for x in predictions[0]]))
+
+        print("\nPredictions: {}".format(predictions[0]))
+
+        print('Sample 2:')
+        print(' '.join([y_id_to_word[np.argmax(x)] for x in predictions[1]]))
+        print(' '.join([y_id_to_word[np.max(x)] for x in preEs[0]]))
+
+        self.ui.spanishBox.setText(' '.join([y_id_to_word[np.argmax(x)] for x in predictions[0]
+                                             if y_id_to_word[np.argmax(x)] != "<PAD>"]))
+
+
+if __name__ == "__main__":
+    import sys
+
+    app = QApplication(sys.argv)
+    w = MainWindow()
+    w.show()
+    sys.exit(app.exec_())
