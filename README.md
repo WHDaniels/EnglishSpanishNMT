@@ -1,2 +1,2 @@
 # EnglishSpanishNMT
-English to Spanish translator built through with a recurrent neural network.
+English to Spanish translator built with a recurrent neural network.
