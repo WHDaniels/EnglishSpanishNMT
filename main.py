@@ -6,7 +6,7 @@ import os
 from gui import Ui_MainWindow
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow, QApplication
 
-model = keras.models.load_model(os.getcwd() + '\\finalReducedModel')
+model = keras.models.load_model(os.getcwd() + '\\finalReducedModel2')
 preEn, preEs, tkEn, tkEs, enInput = train.preprocess()
 
 

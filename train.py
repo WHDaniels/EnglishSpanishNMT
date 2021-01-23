@@ -63,7 +63,7 @@ def loadData():
     esPhrases = []
 
     # read phrase file and add each phrase to its respective list
-    translationFile = "finalReduced.txt"
+    translationFile = "finalReduced6.txt"
     with open(translationFile, "r", encoding='utf-8') as file:
         content = file.readlines()
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     learningRate = 0.005
     model = Sequential()
 
-    # why the plus 1 on embedding input_dim and time distributed? implications?
+    # add layers
     model.add(Embedding(input_dim=len(tkEn.word_index) + 1, output_dim=128, input_length=enInput.shape[1]))
     model.add(Bidirectional(GRU(256, return_sequences=False)))
     model.add(RepeatVector(padEs.shape[1]))
@@ -221,7 +221,7 @@ if __name__ == '__main__':
                   metrics=['accuracy'])
 
     # callback to save best model
-    checkpointPath = (os.getcwd() + '\\finalReducedModel')
+    checkpointPath = (os.getcwd() + '\\finalReducedModel2')
     model_checkpoint_callback = callbacks.ModelCheckpoint(
         filepath=checkpointPath,
         monitor='val_accuracy',
