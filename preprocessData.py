@@ -1,4 +1,6 @@
 from random import shuffle
+from keras_preprocessing.text import Tokenizer
+from time import perf_counter
 
 
 # combine both 'europarl' datasets into one
@@ -14,7 +16,6 @@ def combineEuroparl():
 
 
 # combine 'combined.txt' + 'Taboeba.txt' + 'europarlCombined.txt'
-
 def combineThree():
     with open('combined.txt', 'r', encoding='utf-8') as file1, \
             open('Tatoeba.txt', 'r', encoding='utf-8') as file2, \
@@ -32,7 +33,6 @@ def combineThree():
 
 
 # combine 'combined.txt' + 'Taboeba.txt'
-
 def combineTwo():
     with open('combined2.txt', 'r', encoding='utf-8') as file1, \
             open('Tatoeba.txt', 'r', encoding='utf-8') as file2, \
@@ -78,18 +78,16 @@ def shuffleReduced():
             wFile.write(readf[x])
 
 
-from keras_preprocessing.text import Tokenizer
-from time import perf_counter
-
 """
 Make multiple training data files based on if all words in the file are
 in the top percentage of words in the full dataset
 """
 
-# Top 1/6 of the word set
-def top1():
+# outfiles: (finalReduced2.txt, finalReduced3.txt, etc)
+
+def topXInSet(outFile, x):
     with open('reducedCombined(no gov).txt', 'r', encoding='utf-8') as file, \
-            open('finalReduced2.txt', 'w', encoding='utf-8') as target:
+            open(outFile, 'w', encoding='utf-8') as target:
         f = file.readlines()
 
         shuffle(f)
@@ -101,205 +99,12 @@ def top1():
 
         start = perf_counter()
 
-        # around 9000
-        stopNum = round(1 / 6 * (len(tk.word_index)))
-
-        for n in range(len(f)):
-            keep = True
-            for word in f[n].split():
-                if keep is True:
-                    for num, entry in enumerate(list(tk.word_index.keys())):
-                        word = ''.join(c for c in word if c not in '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n').lower()
-                        if entry == word:
-                            break
-                        if num == stopNum:
-                            keep = False
-                            break
-            tfList.append(keep)
-
-        stop = perf_counter()
-
-        i = 0
-        for tf in tfList:
-            if tf:
-                i = i + 1
-
-        print("Trues:", i)
-        print("Time to finish:", stop - start)
-
-        for x in range(len(f)):
-            if tfList[x] is True:
-                target.write(f[x])
-
-        print("\n" + str(stopNum))
-        print(len(f))
-        print(len(tfList))
-
-# Top 1/8 of the word set
-def top2():
-    with open('reducedCombined(no gov).txt', 'r', encoding='utf-8') as file, \
-            open('finalReduced3.txt', 'w', encoding='utf-8') as target:
-        f = file.readlines()
-
-        shuffle(f)
-
-        tk = Tokenizer()
-        tk.fit_on_texts(f)
-
-        tfList = []
-
-        start = perf_counter()
-
-        # around 7000
-        stopNum = round(1 / 8 * (len(tk.word_index)))
-
-        for n in range(len(f)):
-            keep = True
-            for word in f[n].split():
-                if keep is True:
-                    for num, entry in enumerate(list(tk.word_index.keys())):
-                        word = ''.join(c for c in word if c not in '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n').lower()
-                        if entry == word:
-                            break
-                        if num == stopNum:
-                            keep = False
-                            break
-            tfList.append(keep)
-
-        stop = perf_counter()
-
-        i = 0
-        for tf in tfList:
-            if tf:
-                i = i + 1
-
-        print("Trues:", i)
-        print("Time to finish:", stop - start)
-
-        for x in range(len(f)):
-            if tfList[x] is True:
-                target.write(f[x])
-
-        print("\n" + str(stopNum))
-        print(len(f))
-        print(len(tfList))
-
-# Top 1/10 of the word set
-def top3():
-    with open('reducedCombined(no gov).txt', 'r', encoding='utf-8') as file, \
-            open('finalReduced4.txt', 'w', encoding='utf-8') as target:
-        f = file.readlines()
-
-        shuffle(f)
-
-        tk = Tokenizer()
-        tk.fit_on_texts(f)
-
-        tfList = []
-
-        start = perf_counter()
-
-        # around 5500
-        stopNum = round(1 / 10 * (len(tk.word_index)))
-
-        for n in range(len(f)):
-            keep = True
-            for word in f[n].split():
-                if keep is True:
-                    for num, entry in enumerate(list(tk.word_index.keys())):
-                        word = ''.join(c for c in word if c not in '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n').lower()
-                        if entry == word:
-                            break
-                        if num == stopNum:
-                            keep = False
-                            break
-            tfList.append(keep)
-
-        stop = perf_counter()
-
-        i = 0
-        for tf in tfList:
-            if tf:
-                i = i + 1
-
-        print("Trues:", i)
-        print("Time to finish:", stop - start)
-
-        for x in range(len(f)):
-            if tfList[x] is True:
-                target.write(f[x])
-
-        print("\n" + str(stopNum))
-        print(len(f))
-        print(len(tfList))
-
-# Top 1/15 of the word set
-def top4():
-    with open('reducedCombined(no gov).txt', 'r', encoding='utf-8') as file, \
-            open('finalReduced5.txt', 'w', encoding='utf-8') as target:
-        f = file.readlines()
-
-        shuffle(f)
-
-        tk = Tokenizer()
-        tk.fit_on_texts(f)
-
-        tfList = []
-
-        start = perf_counter()
-
-        # around 3500
-        stopNum = round(1 / 15 * (len(tk.word_index)))
-
-        for n in range(len(f)):
-            keep = True
-            for word in f[n].split():
-                if keep is True:
-                    for num, entry in enumerate(list(tk.word_index.keys())):
-                        word = ''.join(
-                            c for c in word if c not in '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n').lower()
-                        if entry == word:
-                            break
-                        if num == stopNum:
-                            keep = False
-                            break
-            tfList.append(keep)
-
-        stop = perf_counter()
-
-        i = 0
-        for tf in tfList:
-            if tf:
-                i = i + 1
-
-        print("Trues:", i)
-        print("Time to finish:", stop - start)
-
-        for x in range(len(f)):
-            if tfList[x] is True:
-                target.write(f[x])
-
-        print("\n" + str(stopNum))
-        print(len(f))
-        print(len(tfList))
-
-# Top 1/20 of the word set
-def top5():
-    with open('reducedCombined(no gov).txt', 'r', encoding='utf-8') as file, \
-            open('finalReduced6.txt', 'w', encoding='utf-8') as target:
-        f = file.readlines()
-
-        shuffle(f)
-
-        tk = Tokenizer()
-        tk.fit_on_texts(f)
-
-        tfList = []
-
-        start = perf_counter()
-
-        # around 2750
-        stopNum = round(1 / 20 * (len(tk.word_index)))
+        # x = 6 -> 9000 words
+        # x = 8 -> 7000 words
+        # x = 10 -> 5500 words
+        # x = 15 -> 3500 words
+        # x = 20 -> 2750 words
+        stopNum = round(1 / x * (len(tk.word_index)))
 
         for n in range(len(f)):
             keep = True
