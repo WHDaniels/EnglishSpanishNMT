@@ -1,13 +1,14 @@
+import pickle
 import numpy as np
 from keras_preprocessing.sequence import pad_sequences
 from tensorflow import keras
-import train
 import os
 from gui import Ui_MainWindow
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow, QApplication
 
-model = keras.models.load_model(os.getcwd() + '\\finalReducedModel2')
-preEn, preEs, tkEn, tkEs, enInput = train.preprocess()
+model = keras.models.load_model(os.getcwd() + '\\FINAL1')
+padEn, padEs = pickle.load(open('data//padEn.p', 'rb')), pickle.load(open('data//padEs.p', 'rb'))
+tkEn, tkEs = pickle.load(open('data//tkEn.p', 'rb')), pickle.load(open('data//tkEs.p', 'rb'))
 
 
 class MainWindow(QMainWindow):
@@ -33,22 +34,22 @@ class MainWindow(QMainWindow):
         y_id_to_word[0] = '<PAD>'
 
         sentence, original = inputText, inputText
-
         print(tkEn.word_index)
+
         # sentence equals the list of ids that correspond to each word in sentence
         sentence = [tkEn.word_index[word] for word in sentence.split()]
         print("[tkEn.word_index[word] for word in sentence.split()]", sentence)
 
         # post pad the sentence to the length of the n dimension
-        sentence = pad_sequences([sentence], maxlen=preEn.shape[-1], padding='post')
+        sentence = pad_sequences([sentence], maxlen=padEn.shape[-1], padding='post')
 
-        # print("preEn shape: {}".format(preEn.shape))
-        # print("preEn shape[-1]: {}".format(preEn.shape[-1]))
+        # print("padEn shape: {}".format(padEn.shape))
+        # print("padEn shape[-1]: {}".format(padEn.shape[-1]))
 
         print("Sentence: ", sentence)
         print("Sentence shape: ", sentence.shape)
 
-        sentences = np.array([sentence[0], preEn[0]])
+        sentences = np.array([sentence[0], padEn[0]])
         print(sentence)
 
         predictions = model.predict(sentences, len(sentences))
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow):
         print('Sample 1:')
         print(original)
         print(' '.join([y_id_to_word[np.argmax(x)] for x in predictions[0]]))
+        print()
 
         print("\nPredictions: ", predictions[0])
         print(predictions.shape)
@@ -63,7 +65,7 @@ class MainWindow(QMainWindow):
 
         print('Sample 2:')
         print(' '.join([y_id_to_word[np.argmax(x)] for x in predictions[1]]))
-        print(' '.join([y_id_to_word[np.max(x)] for x in preEs[0]]))
+        print(' '.join([y_id_to_word[np.max(x)] for x in padEs[0]]))
 
         outputText = ' '.join([y_id_to_word[np.argmax(x)] for x in predictions[0]
                                if y_id_to_word[np.argmax(x)] != "<PAD>"])
