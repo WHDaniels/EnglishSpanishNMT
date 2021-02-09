@@ -345,6 +345,22 @@ def sequenceToText(sequence, tk):
     return ' '.join([sequenceToWords[prediction] for prediction in np.argmax(sequence, 1)])
 
 
-if __name__ == '__main__':
+def testTrainingSeparate(translationFile, trainAmount):
+    with open(translationFile, 'r', encoding='utf-8') as parent, \
+            open("training.txt", 'w', encoding='utf-8') as train, \
+            open("test.txt", 'w', encoding='utf-8') as test:
+        parentRead = parent.readlines()
+
+        cutoff = round(len(parentRead) * trainAmount)
+
+        for phrase in parentRead[:cutoff]:
+            train.write(phrase)
+
+        for phrase in parentRead[cutoff:]:
+            test.write(phrase)
+
+
+if __name__ == "__main__":
     # topXInSet("finalReduced2.txt", 6)
-    preprocess("finalReduced.txt")
+    # testTrainingSeparate("finalReduced.txt", 0.8)
+    preprocess("training.txt")
