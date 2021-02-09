@@ -1,6 +1,7 @@
 import os
 import _pickle as pickle
 
+from sklearn.model_selection import train_test_split
 from keras import callbacks
 from keras.layers import GRU, Dense, TimeDistributed, RepeatVector, Bidirectional
 from keras.layers.embeddings import Embedding
@@ -20,7 +21,8 @@ if __name__ == '__main__':
     print("\nSpanish Vocab: {}".format(len(tkEs.word_index)))
 
     # try 5e-4, .0005
-    learningRate = 0.001
+    # learningRate = 0.001
+    learningRate = 0.0005
     model = Sequential()
 
     # add layers
