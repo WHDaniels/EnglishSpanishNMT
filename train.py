@@ -7,8 +7,8 @@ from keras.layers import GRU, Dense, TimeDistributed, RepeatVector, Bidirectiona
 from keras.layers.embeddings import Embedding
 from keras.optimizers import Adam
 from keras.losses import sparse_categorical_crossentropy
+from keras.models import load_model
 from tensorflow.python.keras.models import Sequential
-
 
 if __name__ == '__main__':
     # combineData()
@@ -22,7 +22,10 @@ if __name__ == '__main__':
 
     # try 5e-4, .0005
     # learningRate = 0.001
-    learningRate = 0.0005
+    learningRate = 0.0001
+
+    # Remove comments below when loading previously trained model for continued training
+    # """
     model = Sequential()
 
     # add layers
@@ -36,9 +39,20 @@ if __name__ == '__main__':
     model.compile(loss=sparse_categorical_crossentropy,
                   optimizer=Adam(learningRate),
                   metrics=['accuracy'])
+    # """
+
+    # Add comments below to load previously trained model (MAKE SURE TO CHANGE SAVE PATH)
+    # Load previously trained model
+    """
+    model = load_model('FINAL2')
+    model.summary()
+
+    loss, acc = model.evaluate(padEn, padEs)
+    print('Restored model, accuracy: {:5.2f}%'.format(100 * acc))
+    """
 
     # callback to save best model
-    checkpointPath = (os.getcwd() + '\\FINAL1')
+    checkpointPath = (os.getcwd() + '\\FINAL4')
     model_checkpoint_callback = callbacks.ModelCheckpoint(
         filepath=checkpointPath,
         monitor='val_accuracy',
@@ -46,10 +60,4 @@ if __name__ == '__main__':
         save_best_only=True)
 
     # trains model
-    model.fit(padEn, padEs, batch_size=64, epochs=50, validation_split=0.2, callbacks=[model_checkpoint_callback])
-
-    # saves model after training
-    # savePath = 'C:\\Users\\mercm\\OneDrive\\Documents\\GitHub\\EnglishSpanishNMT\\model'
-    # save_model(model, savePath)
-
-    # print(sequenceToText(model.predict(enInput[:1])[0], tkEs))
+    model.fit(padEn, padEs, batch_size=256, epochs=300, validation_split=0.2, callbacks=[model_checkpoint_callback])
