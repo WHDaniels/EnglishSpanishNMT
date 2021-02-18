@@ -6,7 +6,7 @@ import os
 from gui import Ui_MainWindow
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QMainWindow, QApplication
 
-model = keras.models.load_model(os.getcwd() + '\\FINAL1')
+model = keras.models.load_model(os.getcwd() + '\\FINAL3')
 padEn, padEs = pickle.load(open('data//padEn.p', 'rb')), pickle.load(open('data//padEs.p', 'rb'))
 tkEn, tkEs = pickle.load(open('data//tkEn.p', 'rb')), pickle.load(open('data//tkEs.p', 'rb'))
 
