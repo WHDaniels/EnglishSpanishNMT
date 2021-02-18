@@ -32,12 +32,13 @@ The test set is taken from 20 percent of the total data and used to judge the ac
 sentences (translations by the model, or the models output given 'y_train') to reference phrases (the real translations, or 'y_test').
 
 Accuracy is given in the form of a BLEU (bilingual evaluation understudy) score. 
+
 ![Screenshot](images/bleuScoreReference.png)
 > A rough reference for the BLEU score metric.
 
-
 Since the BLEU score's recommended use is as a corpus-wide metric, we add every candidate and reference sentence to a respective list
-and calculate the BLEU score from these two lists. 
+and calculate the BLEU score from these two lists.
+
 ![Screenshot](images/bleuScoreForModel.png)
 > EnglishSpanishNMT's BLEU score evaluation on the test set.
 
