@@ -3,9 +3,9 @@ import numpy as np
 from keras_preprocessing.sequence import pad_sequences
 from tensorflow import keras
 import os
+from nltk.translate.bleu_score import corpus_bleu
 from nltk.translate.bleu_score import sentence_bleu
 
-model = keras.models.load_model(os.getcwd() + '\\FINAL1')
 padEn, padEs = pickle.load(open('data//padEn.p', 'rb')), pickle.load(open('data//padEs.p', 'rb'))
 tkEn, tkEs = pickle.load(open('data//tkEn.p', 'rb')), pickle.load(open('data//tkEs.p', 'rb'))
 
@@ -26,11 +26,14 @@ def separatePhrases(testFile):
     return enPhrases, esPhrases
 
 
-def testAccuracy(enPhrases, esPhrases):
-    translatedList = []
-    scoreCounter = 0
-    skipCounter = 0
+def testAccuracy(enPhrases, esPhrases, modelName):
+    model = keras.models.load_model(os.getcwd() + '\\' + modelName)
 
+    translatedList = list()
+    candidateList = list()
+    referenceList = list()
+
+    skipCounter = 0
     for n, phrase in enumerate(enPhrases):
         # mirrors the key to value relationship in tkEn.word_index
         y_id_to_word = {value: key for key, value in tkEs.word_index.items()}
@@ -64,19 +67,17 @@ def testAccuracy(enPhrases, esPhrases):
         translatedList.append(translated)
 
         print("Translated:", translated)
-        print("esPhrases[n]:", esPhrases[n])
+        print("esPhrases[n]:", esPhrases[n], "\n")
         candidate = [token for token in translated.split()]
         reference = [token for token in esPhrases[n].split()]
 
-        score = sentence_bleu([reference], candidate, weights=(1, 0, 0, 0))
-        print(score)
+        candidateList.append(candidate)
+        referenceList.append([reference])
 
-        scoreCounter += score
-
-    averageScore = scoreCounter / (len(enPhrases) - skipCounter)
-    print("\nThe average BLEU score for this model is ", averageScore)
+    score = corpus_bleu(referenceList, candidateList, weights=(1, 0, 0, 0))
+    print("\nThe average BLEU score for this model is ", score)
 
 
 if __name__ == "__main__":
     en, es = separatePhrases('test.txt')
-    testAccuracy(en, es)
+    testAccuracy(en, es, "FINAL4")
