@@ -24,7 +24,7 @@ The padded English array is our model input, and the padded Spanish array is the
 
 ## Model Training
 A Keras Sequential model with five layers (Embedding, two Bidirectional, RepeatVector, and a Dense layer with a 
-softmax activation) is used. This model is trained for 50 epochs with a batch size of 64, learning rate of .0001, 
+softmax activation) is used. This model is trained for 180 epochs with a batch size of 256, learning rate of .0001, 
 and takes a 20 percent validation split.
 
 ## Test Results
